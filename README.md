@@ -18,3 +18,5 @@ Restricciones.
 ### Tinkercad
 
 Enlace al simulador: https://www.tinkercad.com/things/htdz5IKxHRs
+
+![image](https://github.com/AntekR/Parcial1-Info2/assets/83246281/5a0d90b2-b39e-49b9-b580-27ef9a21e388)
