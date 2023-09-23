@@ -1,0 +1,83 @@
+#include <SPI.h>
+
+
+const int latchPin=5;
+const int clockPin=6;
+const int dataPin=4;
+byte patron[8][8]={0};
+
+void setup(){
+  
+  pinMode(latchPin, OUTPUT);
+  pinMode(clockPin, OUTPUT);
+  pinMode(dataPin, OUTPUT);
+  
+  // Iniciacion para la entrada
+  Serial.begin(9600);
+  escribirPatron(patron);
+
+  
+}
+
+void loop(){
+
+  
+}
+
+// Funciones
+
+// Verificar leds
+
+void verificacion(){
+  for(int i=0; i<8; i++){
+  	digitalWrite(latchPin, LOW);
+  	shiftOut(dataPin, clockPin, LSBFIRST,B11111111);
+    digitalWrite(latchPin, HIGH);  	
+  }
+  delay(1000); 
+  for(int i=0; i<8; i++){
+  	digitalWrite(latchPin, LOW);
+  	shiftOut(dataPin, clockPin, LSBFIRST,B00000000);
+  	digitalWrite(latchPin, HIGH); 	
+  }
+  delay(2000); 
+}
+
+
+// Imagen (lectura del patron segun el usuario)
+void imagen(){
+  for (int fila=0; fila<8; fila++){
+    Serial.print("Fila " + String(fila+1)+": ");
+      while(!Serial.available());
+      String bitChar = Serial.readStringUntil('\n');
+      patron[fila]= byte(strtol(bitChar.c_str(), NULL, 2));
+
+    Serial.println();
+  }
+}
+
+void mostrar(){
+  for (int fila=0; fila<8;fila++){
+      digitalWrite(latchPin, LOW);
+      shiftOut(dataPin, clockPin, MSBFIRST, patron[fila]);
+      digitalWrite(latchPin, HIGH);
+    }
+	delay(200);
+
+}
+
+// Patron X
+
+void patronX(byte m[8]){
+    for(int fila=0; fila<8; fila++){
+        String tempo;
+        for(int columna=0; columna<8;columna++){
+            if((fila==columna) || (fila==7-columna)){
+                tempo+="1";
+            }else{
+                tempo+="0";
+            }
+        }
+        patron[fila]=byte(strtol(tempo.c_str(), NULL, 2));
+    }
+}
