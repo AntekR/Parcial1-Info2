@@ -57,12 +57,12 @@ void imagen(){
 }
 
 void mostrar(){
-  for (int fila=0; fila<8;fila++){
-      digitalWrite(latchPin, LOW);
-      shiftOut(dataPin, clockPin, MSBFIRST, patron[fila]);
-      digitalWrite(latchPin, HIGH);
+  digitalWrite(latchPin, LOW);
+  for (int fila=0; fila<8;fila++){     
+      shiftOut(dataPin, clockPin, MSBFIRST, patron[fila]);     
     }
-	delay(200);
+  digitalWrite(latchPin, HIGH);
+  delay(200);
 
 }
 
@@ -81,3 +81,68 @@ void patronX(byte m[8]){
         patron[fila]=byte(strtol(tempo.c_str(), NULL, 2));
     }
 }
+
+
+/// PUBLIK
+
+void verificarLeds(){
+  int nSecuencias; 
+  int timeOn; 
+  int timeOff;
+  Serial.println("Ingrese el numero de secuencias: ");
+  while (!Serial.available());
+  nSecuencias=Serial.parseInt();
+  Serial.println("Ingrese el tiempo de encendido: "); 
+  while (!Serial.available());
+  timeOn=Serial.parseInt();
+  Serial.println("Ingrese el tiempo de apagado: "); 
+  while (!Serial.available());
+  timeOff=Serial.parseInt();
+  for(int s=0; s<nSecuencias; s++){
+    for(int i=0; i<8; i++){
+        digitalWrite(latchPin, LOW);
+        shiftOut(dataPin, clockPin, LSBFIRST,B11111111);
+        digitalWrite(latchPin, HIGH);  	
+    }
+    delay(timeOn); 
+    for(int i=0; i<8; i++){
+        digitalWrite(latchPin, LOW);
+        shiftOut(dataPin, clockPin, LSBFIRST,B00000000);
+        digitalWrite(latchPin, HIGH); 	
+    }
+    delay(timeOff); 
+  }
+}
+
+void imagen(){
+  for (int fila=0; fila<8; fila++){
+    Serial.print("Fila " + String(fila+1)+": ");
+      while(!Serial.available());
+      String bitChar = Serial.readStringUntil('\n');
+      patron[fila]= byte(strtol(bitChar.c_str(), NULL, 2));
+
+    Serial.println();
+  }
+  int timeOn, timeOff;
+  Serial.println("Ingrese el tiempo de encendido: "); 
+  while (!Serial.available());
+  timeOn=Serial.parseInt();
+  Serial.println("Ingrese el tiempo de apagado: "); 
+  while (!Serial.available());
+  timeOff=Serial.parseInt();
+  
+  digitalWrite(latchPin, LOW);
+  for (int fila=0; fila<8;fila++){     
+      shiftOut(dataPin, clockPin, MSBFIRST, patron[fila]);     
+    }
+  digitalWrite(latchPin, HIGH);
+  delay(timeOn);
+  
+  digitalWrite(latchPin, LOW);
+  for (int fila=0; fila<8;fila++){     
+      shiftOut(dataPin, clockPin, MSBFIRST, B00000000);     
+    }
+  digitalWrite(latchPin, HIGH);
+  delay(timeOff);
+}
+
