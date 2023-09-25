@@ -1,0 +1,253 @@
+#include <SPI.h>
+
+const int latchPin=5;
+const int clockPin=6;
+const int dataPin=4;
+byte patron[8];
+void (*patrones[])(void) = {patron1, patron2, patron3, patron4};
+
+void setup(){
+  
+  pinMode(latchPin, OUTPUT);
+  pinMode(clockPin, OUTPUT);
+  pinMode(dataPin, OUTPUT);
+  
+  // Iniciacion para la entrada
+  Serial.begin(9600);
+  Serial.println("Menu");
+  Serial.println("a. Verificacion de Leds");
+  Serial.println("b. Patron de prueba - mostrar");
+  Serial.println("c. Mostrar patrones aleartorios");
+
+  
+}
+
+void loop(){
+	publik();
+}
+
+//Funcion Ejercicio 5
+void publik(){
+	if (Serial.available()) {
+    char opcion = Serial.read();
+    switch (opcion) {
+      case 'a':
+        verificarLeds();
+        break;
+      case 'b':
+        imagenPrueba();
+        break;
+      case 'c':
+        mostrarAleatorio();
+        break;
+    }
+  }
+}
+//Funcion complementaria para mostrar los patrones. 
+void mostrar(byte patron[8],int tarda){
+  digitalWrite(latchPin, LOW);
+  for (int fila=0; fila<8;fila++){     
+      shiftOut(dataPin, clockPin, LSBFIRST, patron[fila]);     
+    }
+  digitalWrite(latchPin, HIGH);
+  delay(tarda);
+
+}
+
+//Funciones complementarias de PUBLIK 
+
+void verificarLeds(){
+  int nSecuencias; 
+  int timeOn; 
+  int timeOff;
+  Serial.println("Ingrese el numero de secuencias: ");
+  while (!Serial.available());
+  nSecuencias=Serial.parseInt();
+  Serial.println("Ingrese el tiempo de encendido: "); 
+  while (!Serial.available());
+  timeOn=Serial.parseInt();
+  Serial.println("Ingrese el tiempo de apagado: "); 
+  while (!Serial.available());
+  timeOff=Serial.parseInt();
+  for(int s=0; s<nSecuencias; s++){
+    for(int i=0; i<8; i++){
+        digitalWrite(latchPin, LOW);
+        shiftOut(dataPin, clockPin, LSBFIRST,B11111111);
+        digitalWrite(latchPin, HIGH);  	
+    }
+    delay(timeOn); 
+    for(int i=0; i<8; i++){
+        digitalWrite(latchPin, LOW);
+        shiftOut(dataPin, clockPin, LSBFIRST,B00000000);
+        digitalWrite(latchPin, HIGH); 	
+    }
+    delay(timeOff); 
+  }
+}
+
+void imagenPrueba(){
+  for (int fila=0; fila<8; fila++){
+    Serial.print("Fila " + String(fila+1)+": ");
+      while(!Serial.available());
+      String bitChar = Serial.readStringUntil('\n');
+      patron[fila]= byte(strtol(bitChar.c_str(), NULL, 2));
+
+    Serial.println();
+  }
+  int timeOn, timeOff;
+  Serial.println("Ingrese el tiempo de encendido: "); 
+  while (!Serial.available());
+  timeOn=Serial.parseInt();
+  Serial.println("Ingrese el tiempo de apagado: "); 
+  while (!Serial.available());
+  timeOff=Serial.parseInt();
+  
+  digitalWrite(latchPin, LOW);
+  for (int fila=0; fila<8;fila++){     
+      shiftOut(dataPin, clockPin, LSBFIRST, patron[fila]);     
+    }
+  digitalWrite(latchPin, HIGH);
+  delay(timeOn);
+  
+  digitalWrite(latchPin, LOW);
+  for (int fila=0; fila<8;fila++){     
+      shiftOut(dataPin, clockPin, MSBFIRST, B00000000);     
+    }
+  digitalWrite(latchPin, HIGH);
+  delay(timeOff);
+}
+
+
+void mostrarAleatorio(){
+  int tiempoRetardo;
+  Serial.println("Ingrese el tiempo de retardo entre patrones en milisegundos:");
+  while (!Serial.available());
+  tiempoRetardo = Serial.parseInt();
+
+  for (int i = 0; i < 4; i++) {
+    patrones[i]();
+    mostrar(patron, tiempoRetardo);
+  }
+  for(int a=0; a<8; a++){
+    digitalWrite(latchPin, LOW);
+  	shiftOut(dataPin, clockPin, LSBFIRST,B00000000);
+  	digitalWrite(latchPin, HIGH);
+  }
+  
+}
+
+//Patrones del ejercicio 4
+void patron1(){
+  int p1=3; int p2=4;
+    for (int i = 0; i < 8; ++i) {
+
+        String tempo="00000000";
+        if(i<4){
+            for (int k=p1; k <=p2; ++k) {
+                tempo[k]='1';
+            }
+            patron[i]=byte(strtol(tempo.c_str(), NULL, 2));
+            p1-=1; p2+=1;
+        }else{
+            p1+=1; p2-=1;
+            for (int k=p1; k <=p2; ++k) {
+                tempo[k]='1';
+            }
+            patron[i]=byte(strtol(tempo.c_str(), NULL, 2));
+        }
+    }
+}
+
+void patron2(){
+    for(int fila=0; fila<8; fila++){
+        String tempo;
+        for(int columna=0; columna<8;columna++){
+            if((fila==columna) || (fila==7-columna)){
+                tempo+="1";
+            }else{
+                tempo+="0";
+            }
+        }
+        patron[fila]=byte(strtol(tempo.c_str(), NULL, 2));
+    }
+}
+
+void patron3(){
+  int contador=0;
+    for (int i = 0; i < 8; ++i) {
+        String tempo="00000000";
+        if((i==2 || i==3) || (i==6 || i==7)){
+            for(int n=1; n<8;n++){
+                if(contador==2 || contador==5) ;
+                else{
+                    tempo[n]='1';
+                }
+                contador++;
+            }
+        }else{
+            for(int n=0; n<8;n++){
+                if(contador==2 || contador==5);
+                else{
+                    tempo[n]='1';
+                }
+                contador++;
+            }
+        }
+        contador=0;
+        patron[i]=byte(strtol(tempo.c_str(), NULL, 2));
+    }
+}
+
+void patron4(){
+    int p1=0; int p2=3;
+    for (int i = 0; i < 8; ++i) {
+
+        String tempo="00000000";
+        if(i<4){
+            for (int k=p1; k <=p2; ++k) {
+                tempo[k]='1';
+            }
+            patron[i]=byte(strtol(tempo.c_str(), NULL, 2));
+            p1+=1; p2+=1;
+        }else{
+            p1-=1; p2-=1;
+            for (int k=p1; k <=p2; ++k) {
+                tempo[k]='1';
+            }
+            patron[i]=byte(strtol(tempo.c_str(), NULL, 2));
+        }
+    }
+}
+
+//Funcion Imagen - Ejercicio 3
+
+void imagen(){
+  for (int fila=0; fila<8; fila++){
+    Serial.print("Fila " + String(fila+1)+": ");
+      while(!Serial.available());
+      String bitChar = Serial.readStringUntil('\n');
+      patron[fila]= byte(strtol(bitChar.c_str(), NULL, 2));
+
+    Serial.println();
+  }
+}
+
+//Funcion verificación Ejercicio 2
+
+
+void verificacion(){
+  for(int i=0; i<8; i++){
+  	digitalWrite(latchPin, LOW);
+  	shiftOut(dataPin, clockPin, LSBFIRST,B11111111);
+    digitalWrite(latchPin, HIGH);  	
+  }
+  delay(1000); 
+  for(int i=0; i<8; i++){
+  	digitalWrite(latchPin, LOW);
+  	shiftOut(dataPin, clockPin, LSBFIRST,B00000000);
+  	digitalWrite(latchPin, HIGH); 	
+  }
+  delay(2000); 
+}
+
+
